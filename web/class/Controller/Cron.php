@@ -5,7 +5,7 @@ namespace Controller;
 use EVEOnline\ESI\Character\CharacterDetails;
 use EVEOnline\ESI\Character\CharacterRoles;
 use EVEOnline\ESI\EsiFactory;
-use Model\table\OAuth2Users;
+use Model\Table\OAuth2Users;
 use Seat\Eseye\Exceptions\RequestFailedException;
 use Utils\Utils;
 use View\JsonView;

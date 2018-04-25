@@ -1,7 +1,10 @@
 <?php
 
-namespace Model\table;
+namespace Model\Table;
 
+use Model\Expression\SqlExpression;
+use Model\Expression\Where\Equal;
+use Model\Expression\Where\IsTrue;
 use Model\Model;
 use Model\MySQL;
 use Utils\Handler\PhpBB;
@@ -12,9 +15,6 @@ use Utils\Handler\PhpBB;
  * @package Model\table
  */
 class OAuth2Users extends Model {
-
-	const SCHEMA = DB_NAME;
-	const TABLE = "`oauth2_users`";
 
 	/**
 	 * @var integer $id the primary ID
@@ -51,7 +51,7 @@ class OAuth2Users extends Model {
 	 */
 	public function __construct() {
 		parent::__construct(
-			self::SCHEMA . "." . self::TABLE,
+			DB_NAME . "." . "`oauth2_users`",
 			array("id_character", "id_forum_user"),
 			"id"
 		);
@@ -63,14 +63,7 @@ class OAuth2Users extends Model {
 	 * @return OAuth2Users[] Every registered character
 	 */
 	public static function getAllCharacters() {
-		$sqlQuery = "
-			SELECT
-				*
-			FROM
-				" . self::SCHEMA . "." . self::TABLE . "
-			;";
-		$db = new MySQL();
-		return $db->objExec($sqlQuery, __CLASS__);
+		return self::getCharacterFromSqlExpression(new IsTrue());
 	}
 
 	/**
@@ -88,16 +81,7 @@ class OAuth2Users extends Model {
 			return array();
 		}
 
-		$sqlQuery = "
-			SELECT
-				*
-			FROM
-				" . self::SCHEMA . "." . self::TABLE . "
-			WHERE
-				`id_forum_user` = ?
-			;";
-		$db = new MySQL();
-		return $db->objExec($sqlQuery, __CLASS__, array($userId));
+		return self::getCharacterFromSqlExpression(new Equal("id_forum_user"), array($userId));
 	}
 
 	/**
@@ -111,20 +95,38 @@ class OAuth2Users extends Model {
 			return null;
 		}
 
-		$sqlQuery = "
-			SELECT
-				*
-			FROM
-				" . self::SCHEMA . "." . self::TABLE . "
-			WHERE
-				`id_character` = ?
-			;";
-		$db = new MySQL();
-		$ret = $db->objExec($sqlQuery, __CLASS__, array($characterId));
+		$ret = self::getCharacterFromSqlExpression(new Equal("id_character"), array($characterId));
 		if ($ret !== false && !empty($ret)) {
 			return $ret[0];
 		}
 		return NULL;
+	}
+
+	/**
+	 * Retrieves the OAuth2Users from the given Sql Expression
+	 *
+	 * @param SqlExpression $sqlExpression the Sql Expression
+	 * @param array $values the binding array (empty by default)
+	 * @return OAuth2Users[] the user matching the Sql expression
+	 */
+	public static function getCharacterFromSqlExpression(
+		SqlExpression $sqlExpression,
+		array $values = array()
+	) {
+		if (is_null($sqlExpression)) {
+			return array();
+		}
+
+		$sqlQuery = "
+			SELECT
+				*
+			FROM
+				" . DB_NAME . ".`oauth2_users`
+			WHERE
+				" . $sqlExpression->toSql() . "
+			;";
+		$db = new MySQL();
+		return $db->objExec($sqlQuery, __CLASS__, $values);
 	}
 
 }

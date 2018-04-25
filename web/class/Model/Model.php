@@ -79,7 +79,7 @@ abstract class Model {
 	" . $this->table . "
 	(" . implode(", ", $columns) . ")
 	VALUES
-	(" . implode(", ", self::createBindingArray($columns)) . ")
+	(" . implode(", ", MySQL::createBindingArray($columns)) . ")
 	ON DUPLICATE KEY UPDATE
 	" . implode(", ", $columnOnUpdate) . ";";
 
@@ -156,23 +156,6 @@ abstract class Model {
 		$statement = NULL;
 
 		return $status;
-	}
-
-	/**
-	 * Creates the array of "?" for SQL query.
-	 *
-	 * @param array $array the column/value array
-	 * @return array the array of question marks
-	 */
-	private static function createBindingArray($array = array()) {
-		if (!is_array($array) || is_null($array) || empty($array)) {
-			return array();
-		}
-		$ret = array();
-		for ($i = 0; $i < count($array); $i++) {
-			$ret[] = "?";
-		}
-		return $ret;
 	}
 
 	/**

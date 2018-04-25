@@ -5,7 +5,7 @@ ICE Is Coming To EVE website to handle API key through ESI system.
 + Copy the ``web/conf/config.sample.ini`` file to ``web/conf/config.ini``
 + Update the ``web/conf/config.ini``
 + Put all of those file in your web server (with PHP, see req.)
-+ Run the composer command: `composer install` in the `web` folder
++ Run the composer command: ``composer install`` in the ``web`` folder
 
 Some of the feature are not implemented yet, so be patient, will come soon(TM).
 
@@ -33,5 +33,5 @@ Some of the feature are not implemented yet, so be patient, will come soon(TM).
 + Bootstrap design (coz' SmartPhone is life)
 + Install a Redis server to save some data in it instead of file caching (less I/O is better)
 + Build a top layer of Eseye to handle properly requests and Exceptions to the view
-+ Adds a way to multi insert in batch instead of wild looping `INSERT INTO...`
-+ Adds a SQL abstraction for the `WHERE` part
++ Adds a way to multi insert in batch instead of wild looping ``INSERT INTO...``
++ Adds a SQL abstraction for the ``WHERE`` part
