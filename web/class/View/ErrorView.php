@@ -10,6 +10,8 @@ namespace View;
 class ErrorView implements View {
 
 	public function showTemplate() {
-		;
+?>
+<p class="erreur">Erreur inconnue !</p>
+<?php
 	}
 }

@@ -2,10 +2,12 @@
 
 namespace EVEOnline\ESI;
 
-use Model\table\OAuth2Users;
+use Model\Table\OAuth2Users;
 use Seat\Eseye\Configuration;
 use Seat\Eseye\Containers\EsiAuthentication;
 use Seat\Eseye\Eseye;
+use Seat\Eseye\Exceptions\InvalidContainerDataException;
+use Utils\Handler\ErrorHandler;
 
 /**
  * Main class which handles HTTP query, login, and other stuff.
@@ -31,7 +33,6 @@ class EsiFactory {
 	 *
 	 * @param OAuth2Users $oauthUser the OAuth2Users user
 	 * @return Eseye the ESI connection
-	 * @throws \Seat\Eseye\Exceptions\InvalidContainerDataException
 	 */
 	public static function createEsi(
 		OAuth2Users $oauthUser
@@ -51,13 +52,20 @@ class EsiFactory {
 		// Creates an authentication for ESI if not done yet
 		$idCharacter = $oauthUser->id_character;
 		if (!array_key_exists($idCharacter, self::$AUTHENTICATIONS)) {
-			self::$AUTHENTICATIONS[$idCharacter] = new EsiAuthentication(
-				array(
-					"client_id" => ESI_CLIENT_ID,
-					"secret" => ESI_SECRET_KEY,
-					"refresh_token" => $oauthUser->refresh_token
-				)
-			);
+			try {
+				self::$AUTHENTICATIONS[$idCharacter] = new EsiAuthentication(
+					array(
+						"client_id" => ESI_CLIENT_ID,
+						"secret" => ESI_SECRET_KEY,
+						"refresh_token" => $oauthUser->refresh_token
+					)
+				);
+			} catch (InvalidContainerDataException $ex) {
+				// This exception is thrown if the key of the array do not exist
+				// If so, we need to update this and every page is broken until update
+				ErrorHandler::logException($ex);
+				die;
+			}
 		}
 
 		if (!array_key_exists($idCharacter, self::$ESEYES)) {

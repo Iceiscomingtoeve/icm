@@ -1,6 +1,7 @@
 <?php
 
 namespace EVEOnline\ESI\Character;
+use EVEOnline\ESI\Character\Enums\AccessorType;
 
 /**
  * Class ChannelDetails
@@ -10,12 +11,12 @@ namespace EVEOnline\ESI\Character;
 final class ChannelDetails {
 
 	/**
-	 * @var integer
+	 * @var int
 	 */
 	private $accessorId;
 
 	/**
-	 * @var string
+	 * @var AccessorType
 	 */
 	private $accessorType;
 
@@ -33,15 +34,15 @@ final class ChannelDetails {
 	 * ChannelDetails constructor.
 	 *
 	 * @param int $accessorId
-	 * @param string $accessorType
+	 * @param AccessorType $accessorType
 	 * @param string $reason
 	 * @param string $endAt
 	 */
 	public function __construct(
-		$accessorId,
-		$accessorType,
-		$reason,
-		$endAt
+		int $accessorId,
+		AccessorType $accessorType,
+		string $reason,
+		string $endAt
 	) {
 		$this->accessorId = $accessorId;
 		$this->accessorType = $accessorType;
@@ -57,7 +58,7 @@ final class ChannelDetails {
 	}
 
 	/**
-	 * @return string
+	 * @return AccessorType
 	 */
 	public function getAccessorType() {
 		return $this->accessorType;
@@ -86,7 +87,7 @@ final class ChannelDetails {
 	public static function create(array $json) {
 		return new ChannelDetails(
 			$json['accessor_id'],
-			$json['accessor_type'],
+			new AccessorType($json['accessor_type']),
 			array_key_exists("reason", $json) ? $json['reason'] : "",
 			array_key_exists("end_at", $json) ? $json['end_at'] : ""
 		);

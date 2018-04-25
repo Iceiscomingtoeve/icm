@@ -64,7 +64,7 @@ abstract class ADispatcher {
 	 * @param string $page name of the page
 	 * @return ADispatcher the required dispatcher for the page
 	 */
-	private static final function getDispatcherType($page) {
+	private static final function getDispatcherType(string $page) {
 		// List here every AJAX pages
 		$pagesAJAX = array(
 			"cron"

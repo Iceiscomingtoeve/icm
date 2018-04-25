@@ -14,7 +14,7 @@ final class Cookie implements Handler {
 	/**
 	 * Checks if the cookie were accepted by the user
 	 *
-	 * @return boolean true if the user accepted it, false if he must
+	 * @return bool true if the user accepted it, false if he must
 	 */
 	public static final function wasCookieUsageWarned() {
 		return strstr(self::getCookie(DISCLAIMER_NAME), "true") !== false;
@@ -25,9 +25,13 @@ final class Cookie implements Handler {
 	 *
 	 * @param string $name name of your variable in the cookie
 	 * @param mixed $value value of your variable in the cookie
-	 * @param integer $expire set the expiration time (-1 to remove)
+	 * @param int $expire set the expiration time (-1 to remove)
 	 */
-	public static final function setCookie($name, $value, $expire = COOKIE_DEFAULT_EXPIRATION) {
+	public static final function setCookie(
+		string $name,
+		$value,
+		int $expire = COOKIE_DEFAULT_EXPIRATION
+	) {
 		setcookie(
 			$name,
 			$value,
@@ -43,9 +47,9 @@ final class Cookie implements Handler {
 	 * Retrieves the variable value given.
 	 *
 	 * @param string $name name of your variable
-	 * @return mixed the value if found or NULL
+	 * @return mixed|NULL the value if found or NULL
 	 */
-	public static final function getCookie($name) {
+	public static final function getCookie(string $name) {
 		$request = PhpBB::getInstance()->getRequest();
 		return $request->variable($name, NULL, true, request_interface::COOKIE);
 	}
@@ -54,9 +58,9 @@ final class Cookie implements Handler {
 	 * Deletes the given variable from the cookie.
 	 *
 	 * @param string $name name of your variable. If NULL given, will clean out the cookie.
-	 * @return integer returns the number of variable cleaned (must be greater than 0)
+	 * @return int returns the number of variable cleaned (must be greater than 0)
 	 */
-	public static final function deleteCookie($name) {
+	public static final function deleteCookie(string $name) {
 		$nbCookie = 0;
 		$cookie = PhpBB::getInstance()->getRequest()->get_super_global(request_interface::COOKIE);
 

@@ -21,7 +21,7 @@ class Success implements View {
 	 * @param Channel[] $channels
 	 */
 	public function __construct(
-		$channels
+		array $channels
 	) {
 		$this->channels = $channels;
 	}

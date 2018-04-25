@@ -3,7 +3,7 @@
 namespace Controller;
 
 use EVEOnline\OAuth\Login;
-use Model\table\OAuth2Users;
+use Model\Table\OAuth2Users;
 use Utils\Utils;
 
 /**

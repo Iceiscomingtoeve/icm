@@ -12,10 +12,6 @@ use View\View;
  */
 abstract class AController {
 
-	// Treatment failed
-	const TREATMENT_ERROR = "error";
-	// Treatment succeed
-	const TREATMENT_SUCCEED = "success";
 	// Default action on every controller
 	const DEFAULT_ACTION = "show";
 
@@ -32,7 +28,7 @@ abstract class AController {
 	 * @param string $page page name
 	 * @return AController the right AController or NULL if any found
 	 */
-	public static final function getInstance($page) {
+	public static final function getInstance(string $page) {
 		// Retrieves the AController if already created
 		if (!is_null(self::$INSTANCE)) {
 			return self::$INSTANCE;
@@ -63,9 +59,11 @@ abstract class AController {
 	 * @param array $params parameters in an array
 	 * @return View the view according to the controller
 	 */
-	public final function executeAction($action = self::DEFAULT_ACTION, array $params = array()) {
+	public final function executeAction(string $action = self::DEFAULT_ACTION, array $params = array()) {
 		if (method_exists($this, $action)) {
 			return $this->$action($params);
+		} else if ($this instanceof Errors) {
+			return $this->show($params);
 		}
 		return new Error501();
 	}
@@ -74,7 +72,7 @@ abstract class AController {
 	 * Default action for any AController
 	 *
 	 * @param array $params parameters in an array
-	 * @return string treatment state
+	 * @return View the view to print
 	 */
 	public function show(array $params = array()) {
 		return new Error501();

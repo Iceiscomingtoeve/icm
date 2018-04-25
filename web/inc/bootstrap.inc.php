@@ -20,9 +20,6 @@ function createMissingFile($filePath = "") {
 	}
 }
 
-// Init the $_SESSION
-session_start();
-
 // Sets language, charset, TimeZone and other funny stuff
 header("charset=UTF-8");
 mb_internal_encoding("UTF-8");

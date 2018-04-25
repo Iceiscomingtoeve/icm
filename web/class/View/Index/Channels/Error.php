@@ -15,9 +15,9 @@ class Error extends ErrorView {
 
 	/**
 	 * Error constructor.
-	 * @param $message
+	 * @param string $message
 	 */
-	public function __construct($message) {
+	public function __construct(string $message) {
 		$this->message = $message;
 	}
 
