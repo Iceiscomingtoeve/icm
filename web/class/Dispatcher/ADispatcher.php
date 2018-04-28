@@ -64,7 +64,7 @@ abstract class ADispatcher {
 	 * @param string $page name of the page
 	 * @return ADispatcher the required dispatcher for the page
 	 */
-	private static final function getDispatcherType($page) {
+	private static final function getDispatcherType(string $page) {
 		// List here every AJAX pages
 		$pagesAJAX = array(
 			"cron"
@@ -93,7 +93,7 @@ abstract class ADispatcher {
 	 * Dispatches the page, the action, and parameters to the
 	 * right AController.
 	 *
-	 * @return string the template to print
+	 * @return View the view to print
 	 */
 	public final function dispatch() {
 		$request = PhpBB::getInstance()->getRequest();
@@ -158,7 +158,7 @@ abstract class ADispatcher {
 	 * Handles the response accordingly.
 	 *
 	 * @param View $view the view
-	 * @return mixed the value to be printed
+	 * @return View the View to print
 	 */
 	protected abstract function handleResponse(View $view);
 

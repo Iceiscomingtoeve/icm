@@ -3,10 +3,11 @@
 namespace View\Index\Show;
 
 use EVEOnline\ESI\Character\CharacterDetails;
+use Utils\Builder\BreadcrumbBuilder;
 use View\View;
 
 /**
- * Class UpdatePhpbb for the show in Index controller
+ * Class Success for the show in Index controller
  *
  * @package View\Index\Show
  */
@@ -24,6 +25,14 @@ class Success implements View {
 		array $characters
 	) {
 		$this->characters = $characters;
+	}
+
+	public function getPageTitle() {
+		return "Players";
+	}
+
+	public function getBreadcrumb() {
+		return BreadcrumbBuilder::createBreadcrumb();
 	}
 
 	public function showTemplate() {

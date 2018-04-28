@@ -5,7 +5,7 @@ namespace Controller;
 use EVEOnline\ESI\Character\CharacterDetails;
 use EVEOnline\ESI\Character\CharacterRoles;
 use EVEOnline\ESI\EsiFactory;
-use Model\table\OAuth2Users;
+use Model\Table\OAuth2Users;
 use Seat\Eseye\Exceptions\RequestFailedException;
 use Utils\Utils;
 use View\JsonView;
@@ -72,12 +72,16 @@ final class Cron extends AController {
 	/**
 	 * Adds the given user in the given phpbb group.
 	 *
-	 * @param integer $userId the user ID
-	 * @param integer $groupId the group ID
-	 * @param boolean $defaultGroup should it be his default group (true by default)
-	 * @return mixed false if no error occurred, string of I18n from PhpBB in case of error
+	 * @param int $userId the user ID
+	 * @param int $groupId the group ID
+	 * @param bool $defaultGroup should it be his default group (true by default)
+	 * @return string|bool false if no error occurred, string of I18n from PhpBB in case of error
 	 */
-	private static function addUserInGroup($userId, $groupId, $defaultGroup = true) {
+	private static function addUserInGroup(
+		int $userId,
+		int $groupId,
+		bool $defaultGroup = true
+	) {
 		// If the guy is not in the group yet, add him
 		return !group_memberships($groupId, $userId, true) ?
 			// see https://wiki.phpbb.com/Function.group_user_add

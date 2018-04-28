@@ -15,7 +15,7 @@ final class Session implements Handler {
 	 * @param string $name name of your variable
 	 * @param mixed $value value of your variable
 	 */
-	public static final function setSession($name, $value) {
+	public static final function setSession(string $name, $value) {
 		$_SESSION[$name] = $value;
 	}
 
@@ -23,9 +23,9 @@ final class Session implements Handler {
 	 * Retrieves the variable value given.
 	 *
 	 * @param string $name name of your variable
-	 * @return mixed the value if found or NULL
+	 * @return mixed|NULL the value if found or NULL
 	 */
-	public static final function getSession($name) {
+	public static final function getSession(string $name) {
 		return array_key_exists($name, $_SESSION) ? $_SESSION[$name] : NULL;
 	}
 
@@ -33,9 +33,9 @@ final class Session implements Handler {
 	 * Deletes the given variable from the session.
 	 *
 	 * @param string $name name of your variable. If NULL given, will clean out the session.
-	 * @return integer returns the number of variable cleaned (must be greater than 0)
+	 * @return int returns the number of variable cleaned (must be greater than 0)
 	 */
-	public static final function deleteSession($name) {
+	public static final function deleteSession(string $name) {
 		$nbSession = 0;
 
 		if (is_null($name)) {

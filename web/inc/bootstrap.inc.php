@@ -20,9 +20,6 @@ function createMissingFile($filePath = "") {
 	}
 }
 
-// Init the $_SESSION
-session_start();
-
 // Sets language, charset, TimeZone and other funny stuff
 header("charset=UTF-8");
 mb_internal_encoding("UTF-8");
@@ -54,9 +51,7 @@ define("PATH_COMPOSER", PATH_PROJECT . "/vendor", false);
 define("PATH_CONFIG", PATH_PROJECT . "/conf", false);
 define("PATH_CLASS", PATH_PROJECT . "/class", false);
 define("PATH_UTILITY", PATH_CLASS . "/Utils", false);
-define("PATH_DISPATCHER", PATH_CLASS . "/Dispatcher", false);
 define("PATH_CONTROLLER", PATH_CLASS . "/Controller", false);
-define("PATH_MODEL", PATH_CLASS . "/Model", false);
 
 // Creates PHP log file
 createMissingFile(PATH_LOG_PHP_ERROR);
