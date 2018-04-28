@@ -9,6 +9,9 @@ namespace View;
  */
 class JsonView implements View {
 
+	use EmptyPageTitle;
+	use EmptyBreadcrumb;
+
 	private $status;
 
 	/**

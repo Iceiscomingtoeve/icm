@@ -10,7 +10,7 @@ namespace EVEOnline\ESI\Character;
 final class Channel {
 
 	/**
-	 * @var integer
+	 * @var int
 	 */
 	private $channelId;
 
@@ -20,7 +20,7 @@ final class Channel {
 	private $name;
 
 	/**
-	 * @var integer
+	 * @var int
 	 */
 	private $ownerId;
 
@@ -30,7 +30,7 @@ final class Channel {
 	private $comparisonKey;
 
 	/**
-	 * @var boolean
+	 * @var bool
 	 */
 	private $hasPassword;
 
@@ -74,12 +74,12 @@ final class Channel {
 	 * @param ChannelDetails[] $muted
 	 */
 	public function __construct(
-		$channelId,
-		$name,
-		$ownerId,
-		$comparisonKey,
-		$hasPassword,
-		$motd,
+		int $channelId,
+		string $name,
+		int $ownerId,
+		string $comparisonKey,
+		bool $hasPassword,
+		string $motd,
 		array $allowed,
 		array $operators,
 		array $blocked,
@@ -125,7 +125,7 @@ final class Channel {
 	 * @param string $channelType the type of channel to retrieve
 	 * @return array the array (can be empty) of ChannelDetails
 	 */
-	private static function createChannelDetails(array $json, $channelType) {
+	private static function createChannelDetails(array $json, string $channelType) {
 		$channels = array();
 		// Retrieves channels if exists
 		if (array_key_exists($channelType, $json)) {

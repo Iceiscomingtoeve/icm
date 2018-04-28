@@ -5,8 +5,9 @@ namespace Controller;
 use EVEOnline\ESI\Character\CharacterDetails;
 use EVEOnline\ESI\Character\CharacterRoles;
 use EVEOnline\ESI\EsiFactory;
-use Model\table\OAuth2Users;
+use Model\Bean\OAuth2Users;
 use Seat\Eseye\Exceptions\RequestFailedException;
+use Utils\Handler\PhpBB;
 use Utils\Utils;
 use View\JsonView;
 
@@ -21,8 +22,6 @@ final class Cron extends AController {
 
 	public function update_phpbb_groups(array $params = array()) {
 		$characters = OAuth2Users::getAllCharacters();
-		// Require for checking group from the user
-		require_once PATH_PHPBB . "/includes/functions_user.php";
 
 		$updateStatus = array();
 		foreach ($characters as $characterOAuth) {
@@ -42,7 +41,7 @@ final class Cron extends AController {
 				);
 				// If the character is in the right corporation
 				if ($character->getCorporationId() == CORPORATION_ID) {
-					$inCorp = self::addUserInGroup($characterOAuth->id_forum_user, PHPBB_GROUP_VERIFIED_ID);
+					$inCorp = PhpBB::addUserInGroup($characterOAuth->id_forum_user, PHPBB_GROUP_VERIFIED_ID);
 					$updateStatus[$character->getCharacterId()]['in_corp'] = $inCorp === false ? "yes" : "FAIL: " . $inCorp;
 				} else {
 					$updateStatus[$character->getCharacterId()]['in_corp'] = "no";
@@ -57,7 +56,7 @@ final class Cron extends AController {
 				$json = json_decode($res->raw, true);
 				$roles = CharacterRoles::create($json);
 				if (in_array("Director", $roles->getRoles())) {
-					$isDirector = self::addUserInGroup($characterOAuth->id_forum_user, PHPBB_GROUP_DIRECTOR_ID);
+					$isDirector = PhpBB::addUserInGroup($characterOAuth->id_forum_user, PHPBB_GROUP_DIRECTOR_ID);
 					$updateStatus[$character->getCharacterId()]['is_director'] = $isDirector === false ? "yes" : "FAIL: " . $isDirector;
 				} else {
 					$updateStatus[$character->getCharacterId()]['is_director'] = "no";
@@ -67,22 +66,6 @@ final class Cron extends AController {
 			}
 		}
 		return new JsonView($updateStatus);
-	}
-
-	/**
-	 * Adds the given user in the given phpbb group.
-	 *
-	 * @param integer $userId the user ID
-	 * @param integer $groupId the group ID
-	 * @param boolean $defaultGroup should it be his default group (true by default)
-	 * @return mixed false if no error occurred, string of I18n from PhpBB in case of error
-	 */
-	private static function addUserInGroup($userId, $groupId, $defaultGroup = true) {
-		// If the guy is not in the group yet, add him
-		return !group_memberships($groupId, $userId, true) ?
-			// see https://wiki.phpbb.com/Function.group_user_add
-			group_user_add($groupId, $userId, false, false, $defaultGroup) :
-			false;
 	}
 
 }

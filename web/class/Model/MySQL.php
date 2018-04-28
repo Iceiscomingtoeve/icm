@@ -33,7 +33,6 @@ final class MySQL extends \PDO {
 				)
 			);
 		} catch (\PDOException $ex) {
-			debug($ex, true);
 			die("Impossible to connect to Database: " . $ex->getMessage() . " !");
 		}
 	}
@@ -46,7 +45,11 @@ final class MySQL extends \PDO {
 	 * @param array $bindings the array for value bindings
 	 * @return array array of bean that match the SQL query
 	 */
-	public final function objExec($sql, $className, array $bindings = array()) {
+	public final function objExec(
+		string $sql,
+		string $className,
+		array $bindings = array()
+	) {
 		$statement = parent::prepare($sql);
 		try {
 			$statement->execute($bindings);
@@ -58,11 +61,28 @@ final class MySQL extends \PDO {
 	}
 
 	/**
+	 * Creates the array of "?" for SQL query.
+	 *
+	 * @param array $array the column/value array
+	 * @return array the array of question marks
+	 */
+	public static function createBindingArray(array $array = array()) {
+		if (!is_array($array) || is_null($array) || empty($array)) {
+			return array();
+		}
+		$ret = array();
+		for ($i = 0; $i < count($array); $i++) {
+			$ret[] = "?";
+		}
+		return $ret;
+	}
+
+	/**
 	 * Logs the SQL error into file + send mail
 	 *
 	 * @param \PDOStatement $statement PDOStatement or NULL if it was a raw query
 	 */
-	public final function logSqlError(\PDOStatement $statement = NULL) {
+	private function logSqlError(\PDOStatement $statement = NULL) {
 		$sqlQuery = "UNKNOWN";
 		if (!is_null($statement) &&
 			$statement instanceof \PDOStatement

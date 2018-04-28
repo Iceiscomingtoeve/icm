@@ -3,8 +3,10 @@
 namespace Controller;
 
 use EVEOnline\OAuth\Login;
-use Model\table\OAuth2Users;
+use Model\Bean\OAuth2Users;
+use Model\Session\EVECharacter;
 use Utils\Utils;
+use View\View;
 
 /**
  * Handles the Callback page
@@ -19,7 +21,7 @@ final class Callback extends AController {
 	 * Called when the SSO login is done by a user.
 	 *
 	 * @param array $params
-	 * @return string state of the controller
+	 * @return View the view, will always be null
 	 */
 	public function login(array $params = array()) {
 		// The code was not given, might be a manual call to this page.
@@ -50,8 +52,44 @@ final class Callback extends AController {
 		$oauthUser->expire_time = $token->getExpires();
 		$oauthUser->id_character = $user->getId();
 		$oauthUser->id_forum_user = parent::getPhpbbHandler()->getUser()->data['user_id'];
+		$oauthUser->character_name = $user->getName();
+		$oauthUser->is_main_character = empty($this->charactersOAuth) ? true : false;
+
 		$oauthUser->insert();
 		Utils::redirect("/");
+		return NULL;
+	}
+
+	/**
+	 * Called when the user wants to change his current character
+	 *
+	 * @param array $params
+	 * @return View the view, will always be null
+	 */
+	public function change_character(array $params = array()) {
+		// The code was not given, might be a manual call to this page.
+		if (empty($params)) {
+			Utils::redirect("/");
+		}
+
+		$characterId = reset($params);
+		if (!is_numeric($characterId)) {
+			Utils::redirect("/");
+		}
+
+		$oauthUser = OAuth2Users::getCharacterFromCharacterId($characterId);
+		if (is_null($oauthUser)) {
+			Utils::redirect("/");
+		}
+
+		if ($this->getPhpbbHandler()->isDirector() ||
+			$oauthUser->id_forum_user == $this->getPhpbbHandler()->getUser()->data['user_id']
+		) {
+			$this->session->setActiveCharacter(new EVECharacter($oauthUser));
+			Utils::redirect($this->session->getActiveUri());
+		}
+		Utils::redirect("/");
+
 		return NULL;
 	}
 

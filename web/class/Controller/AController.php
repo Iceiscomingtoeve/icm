@@ -2,6 +2,9 @@
 
 namespace Controller;
 
+use Model\Bean\OAuth2Users;
+use Model\Bean\UserSession;
+use Model\Session\EVECharacter;
 use Utils\Handler\PhpBB;
 use Utils\Utils;
 use View\Errors\Error501;
@@ -12,10 +15,6 @@ use View\View;
  */
 abstract class AController {
 
-	// Treatment failed
-	const TREATMENT_ERROR = "error";
-	// Treatment succeed
-	const TREATMENT_SUCCEED = "success";
 	// Default action on every controller
 	const DEFAULT_ACTION = "show";
 
@@ -27,12 +26,22 @@ abstract class AController {
 	private static $INSTANCE = NULL;
 
 	/**
+	 * @var UserSession $session the current User Session
+	 */
+	protected $session;
+
+	/**
+	 * @var OAuth2Users[] $charactersOAuth linked characters
+	 */
+	protected $charactersOAuth = array();
+
+	/**
 	 * Retrieves the AController that can handle the asked page.
 	 *
 	 * @param string $page page name
 	 * @return AController the right AController or NULL if any found
 	 */
-	public static final function getInstance($page) {
+	public static final function getInstance(string $page) {
 		// Retrieves the AController if already created
 		if (!is_null(self::$INSTANCE)) {
 			return self::$INSTANCE;
@@ -53,6 +62,8 @@ abstract class AController {
 			Utils::log("Controller " . $controllerFile . " does not exist !", time());
 			Utils::redirect("/errors/404");
 		}
+		self::$INSTANCE->session = UserSession::getSession();
+		self::$INSTANCE->getActiveCharacterFromUser();
 		return self::$INSTANCE;
 	}
 
@@ -63,9 +74,11 @@ abstract class AController {
 	 * @param array $params parameters in an array
 	 * @return View the view according to the controller
 	 */
-	public final function executeAction($action = self::DEFAULT_ACTION, array $params = array()) {
+	public final function executeAction(string $action = self::DEFAULT_ACTION, array $params = array()) {
 		if (method_exists($this, $action)) {
 			return $this->$action($params);
+		} else if ($this instanceof Errors) {
+			return $this->show($params);
 		}
 		return new Error501();
 	}
@@ -74,10 +87,29 @@ abstract class AController {
 	 * Default action for any AController
 	 *
 	 * @param array $params parameters in an array
-	 * @return string treatment state
+	 * @return View the view to print
 	 */
 	public function show(array $params = array()) {
 		return new Error501();
+	}
+
+	/**
+	 * Retrieves current linked characters + prepares the UserSession with it.
+	 */
+	private function getActiveCharacterFromUser() {
+		if (!$this->getPhpbbHandler()->isAnonymous()) {
+			$this->charactersOAuth = OAuth2Users::getCharacterFromUserId(
+				$this->getPhpbbHandler()->getUser()->data['user_id']
+			);
+		}
+
+		foreach ($this->charactersOAuth as $character) {
+			$eveCharacter = new EVECharacter($character);
+			if ($character->is_main_character && is_null($this->session->getActiveCharacter())) {
+				$this->session->setActiveCharacter($eveCharacter);
+			}
+			$this->session->addEVECharacter($eveCharacter);
+		}
 	}
 
 	/**

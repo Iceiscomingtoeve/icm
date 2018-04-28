@@ -20,9 +20,6 @@ function createMissingFile($filePath = "") {
 	}
 }
 
-// Init the $_SESSION
-session_start();
-
 // Sets language, charset, TimeZone and other funny stuff
 header("charset=UTF-8");
 mb_internal_encoding("UTF-8");
@@ -54,9 +51,7 @@ define("PATH_COMPOSER", PATH_PROJECT . "/vendor", false);
 define("PATH_CONFIG", PATH_PROJECT . "/conf", false);
 define("PATH_CLASS", PATH_PROJECT . "/class", false);
 define("PATH_UTILITY", PATH_CLASS . "/Utils", false);
-define("PATH_DISPATCHER", PATH_CLASS . "/Dispatcher", false);
 define("PATH_CONTROLLER", PATH_CLASS . "/Controller", false);
-define("PATH_MODEL", PATH_CLASS . "/Model", false);
 
 // Creates PHP log file
 createMissingFile(PATH_LOG_PHP_ERROR);
@@ -96,6 +91,10 @@ define("FULL_DOMAIN", "http://" . DOMAIN, false);
 // Cookie configuration
 define("DISCLAIMER_NAME", $iniConfig['disclaimer_name'], false);
 define("COOKIE_DEFAULT_EXPIRATION", $iniConfig['default_expiration'], false);
+// Session architecture
+define("SESSION_CURRENT_URI", "current_uri", false);
+define("SESSION_EVE_CHARACTERS", "characters", false);
+define("SESSION_MAIN_CHARACTER", "main_character", false);
 
 // Mail addresses in case of error
 define("MAIL_DEVELOPER", $iniConfig['developer'], false);

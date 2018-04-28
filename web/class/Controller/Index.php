@@ -5,9 +5,7 @@ namespace Controller;
 use EVEOnline\ESI\Character\Channel;
 use EVEOnline\ESI\Character\CharacterDetails;
 use EVEOnline\ESI\EsiFactory;
-use Model\table\OAuth2Users;
 use Seat\Eseye\Exceptions\EsiScopeAccessDeniedException;
-use Seat\Eseye\Exceptions\RequestFailedException;
 
 /**
  * Handles the Index page
@@ -18,53 +16,48 @@ final class Index extends AController {
 		if ($this->getPhpbbHandler()->isAnonymous()) {
 			return new \View\Index\Show\Error();
 		}
+
 		// Retrieves characters from the player
 		$characters = array();
-		$charactersOAuth = OAuth2Users::getCharacterFromUserId($this->getPhpbbHandler()->getUser()->data['user_id']);
-		foreach ($charactersOAuth as $character) {
+		foreach ($this->charactersOAuth as $character) {
 			$esi = EsiFactory::createEsi($character);
-			try {
-				$res = $esi->invoke(
-					"get",
-					"/characters/{character_id}/",
-					array("character_id" => $character->id_character)
-				);
-			} catch (RequestFailedException $ex) {
-				$res = false;
-			}
-
 			//TODO: Handles properly the API lost
-			if ($res !== false) {
-				// Retrieve the raw JSON
-				$json = json_decode($res->raw, true);
-				$characters[] = CharacterDetails::create(
-					$character->id_character,
-					$json
-				);
-			}
+			$res = $esi->invoke(
+				"get",
+				"/characters/{character_id}/",
+				array("character_id" => $character->id_character)
+			);
+
+			// Retrieve the raw JSON
+			$json = json_decode($res->raw, true);
+			$characters[] = CharacterDetails::create(
+				$character->id_character,
+				$json
+			);
 		}
 		return new \View\Index\Show\Success($characters);
 	}
 
 	public function channels(array $params = array()) {
-		if ($this->getPhpbbHandler()->isAnonymous() ||
-			empty($params)
-		) {
-			return new \View\Index\Channels\Error("Vous devez être connecté sur le forum");
+		if ($this->getPhpbbHandler()->isAnonymous()) {
+			return new \View\Index\Show\Error();
 		}
 
 		// Retrieves characters from the player
-		$characterOAuth = OAuth2Users::getCharacterFromCharacterId($params[0]);
-		if (is_null($characterOAuth)) {
+		$activeCharacter = $this->session->getActiveCharacter();
+		if (is_null($activeCharacter)) {
 			return new \View\Index\Channels\Error("Vous devez sélectionner un personnage");
 		}
 
-		$esi = EsiFactory::createEsi($characterOAuth);
+		$esi = EsiFactory::createEsi($activeCharacter->getOauthUser());
 		try {
+			// Thanks to CCP, it will be removed on 18th May 2018
+			// https://github.com/ccpgames/esi-issues/commit/cfb95bad543de779354abd51c66bf01252a732fb
+			$esi->setVersion("v1");
 			$res = $esi->invoke(
 				"get",
 				"/characters/{character_id}/chat_channels/",
-				array("character_id" => $characterOAuth->id_character)
+				array("character_id" => $activeCharacter->getCharacterId())
 			);
 		} catch (EsiScopeAccessDeniedException $ex) {
 			return new \View\Index\Channels\Error("Vous n'avez pas autorisé la lecture des channels depuis l'ESI");

@@ -3,6 +3,7 @@
 namespace Dispatcher;
 
 use Controller\AController;
+use Model\Bean\UserSession;
 use phpbb\request\request_interface;
 use Utils\Handler\PhpBB;
 use View\Errors\Error404;
@@ -64,7 +65,7 @@ abstract class ADispatcher {
 	 * @param string $page name of the page
 	 * @return ADispatcher the required dispatcher for the page
 	 */
-	private static final function getDispatcherType($page) {
+	private static final function getDispatcherType(string $page) {
 		// List here every AJAX pages
 		$pagesAJAX = array(
 			"cron"
@@ -93,18 +94,30 @@ abstract class ADispatcher {
 	 * Dispatches the page, the action, and parameters to the
 	 * right AController.
 	 *
-	 * @return string the template to print
+	 * @return View the view to print
 	 */
 	public final function dispatch() {
 		$request = PhpBB::getInstance()->getRequest();
 
 		if ($this->controller != NULL) {
-			return $this->handleResponse(
+			$view = $this->handleResponse(
 				$this->controller->executeAction(
 					self::getAction($request),
 					self::getParameters($request)
 				)
 			);
+
+			// Sets the current URI in the cookie in case of callback redirection
+			UserSession::getSession()->setActiveUri(
+				$request->variable(
+					"REQUEST_URI",
+					"/",
+					true,
+					request_interface::SERVER
+				)
+			);
+
+			return $view;
 		}
 		return $this->handleResponse(new Error404());
 	}
@@ -158,7 +171,7 @@ abstract class ADispatcher {
 	 * Handles the response accordingly.
 	 *
 	 * @param View $view the view
-	 * @return mixed the value to be printed
+	 * @return View the View to print
 	 */
 	protected abstract function handleResponse(View $view);
 
