@@ -23,13 +23,18 @@ final class ErrorHandler implements Handler {
 	/**
 	 * Logs the message/error and send a debug mail to MAIL_DEVELOPER if not a E_NOTICE.
 	 *
-	 * @param integer $number error number
+	 * @param int $number error number
 	 * @param string $message error message
 	 * @param string $file file path
-	 * @param integer $line line in the file
+	 * @param int $line line in the file
 	 * @throws \ErrorException
 	 */
-	public static function log($number, $message, $file, $line) {
+	public static function log(
+			int $number,
+			string $message,
+			string $file,
+			int $line
+	) {
 		// Silent operator (@) activated ?
 		if (error_reporting() > 0) {
 			throw new \ErrorException($message, $number, $number, $file, $line);
@@ -215,7 +220,7 @@ final class ErrorHandler implements Handler {
 	/**
 	 * Retrieves the type of error according to its level.
 	 *
-	 * @param integer $errorNumber error value
+	 * @param int|string $errorNumber error value
 	 * @return string error type
 	 */
 	private static function getPhpErrorFromNumber($errorNumber) {
@@ -264,7 +269,11 @@ final class ErrorHandler implements Handler {
 	 * @param string $defValue the default value
 	 * @return string the value of the default value
 	 */
-	private static function getServerVariable($request, $varName, $defValue = "UNKNOWN") {
+	private static function getServerVariable(
+			\phpbb\request\request $request,
+			string $varName,
+			string $defValue = "UNKNOWN"
+	) {
 		return $request->variable($varName, $defValue, true, request_interface::SERVER);
 	}
 

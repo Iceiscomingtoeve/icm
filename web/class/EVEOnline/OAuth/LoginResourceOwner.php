@@ -46,6 +46,15 @@ class LoginResourceOwner implements ResourceOwnerInterface{
 	}
 
 	/**
+	 * Get resource type (character/corporation/alliance).
+	 *
+	 * @return TokenType|null
+	 */
+	public function getTokenType() {
+		return new TokenType($this->response['TokenType']) ?: new TokenType(TokenType::CHARACTER);
+	}
+
+	/**
 	 * Get character owner hash.
 	 *
 	 * @return string|null

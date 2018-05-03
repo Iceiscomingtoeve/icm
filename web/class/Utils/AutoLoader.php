@@ -23,7 +23,7 @@ final class AutoLoader {
 	 * @param string $className the full class name
 	 * @return bool true if the class exists and is included, false otherwise
 	 */
-	public static function loader($className) {
+	public static function loader(string $className) {
 		$classToPath = str_replace("\\", DIRECTORY_SEPARATOR, $className);
 
 		// Self class
