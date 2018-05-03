@@ -82,6 +82,51 @@ final class PhpBB implements Handler {
 	}
 
 	/**
+	 * @return bool true if the user is a director, false otherwise
+	 */
+	public function isDirector() {
+		return self::isUserInGroup($this->user->data['user_id'], PHPBB_GROUP_DIRECTOR_ID);
+	}
+
+	/**
+	 * Is the given user in the given group ?
+	 *
+	 * @param int $userId the user ID
+	 * @param int $groupId the group ID
+	 * @return bool true if he/she is in, false otherwise
+	 */
+	public static function isUserInGroup(
+		int $userId,
+		int $groupId
+	) {
+		// Require for checking group from the user
+		require_once PATH_PHPBB . "/includes/functions_user.php";
+
+		// If the guy is not in the group yet, add him
+		return group_memberships($groupId, $userId, true);
+	}
+
+	/**
+	 * Adds the given user in the given phpbb group.
+	 *
+	 * @param int $userId the user ID
+	 * @param int $groupId the group ID
+	 * @param bool $defaultGroup should it be his default group (true by default)
+	 * @return string|bool false if no error occurred, string of I18n from PhpBB in case of error
+	 */
+	public static function addUserInGroup(
+		int $userId,
+		int $groupId,
+		bool $defaultGroup = true
+	) {
+		// If the guy is not in the group yet, add him
+		return !self::isUserInGroup($groupId, $userId) ?
+			// see https://wiki.phpbb.com/Function.group_user_add
+			group_user_add($groupId, $userId, false, false, $defaultGroup) :
+			false;
+	}
+
+	/**
 	 * Logs out the connected PhpBB user.
 	 */
 	public function logout() {

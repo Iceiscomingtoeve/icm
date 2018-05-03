@@ -2,8 +2,8 @@
 
 namespace Dispatcher;
 
+use Pages\Errors\Views\Error404;
 use Utils\Utils;
-use View\Errors\Error404;
 use View\ErrorView;
 use View\View;
 

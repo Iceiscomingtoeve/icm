@@ -34,9 +34,9 @@ abstract class Model {
 	 * @param string $primaryField the name of column of the primary key
 	 */
 	public function __construct(
-		$table,
-		$uniqueFields = array(),
-		$primaryField = "id"
+		string $table,
+		array $uniqueFields = array(),
+		string $primaryField = "id"
 	) {
 		$this->table = $table;
 		$this->uniqueFields = $uniqueFields;
@@ -58,7 +58,7 @@ abstract class Model {
 	 * @return bool true if the insert is done, false otherwise
 	 */
 	public final function insert(
-		$ignore = false
+		bool $ignore = false
 	) {
 		$properties = self::getProperties($this);
 		$columns = array_keys($properties);
@@ -79,12 +79,18 @@ abstract class Model {
 	" . $this->table . "
 	(" . implode(", ", $columns) . ")
 	VALUES
-	(" . implode(", ", self::createBindingArray($columns)) . ")
+	(" . implode(", ", MySQL::createBindingArray($columns)) . ")
 	ON DUPLICATE KEY UPDATE
 	" . implode(", ", $columnOnUpdate) . ";";
 
 		$db = new MySQL();
 		$statement = $db->prepare($sql);
+		for ($i = 0; $i < count($values); $i++) {
+			$value = $values[$i];
+			if (is_bool($value)) {
+				$values[$i] = intval($value);
+			}
+		}
 		$status = $statement->execute($values);
 		$statement = NULL;
 
@@ -117,6 +123,7 @@ abstract class Model {
 			}
 			$setArray[] = $column . " = ?";
 		}
+		$values = array_values($values);
 
 		$sql = "
 	UPDATE
@@ -126,7 +133,7 @@ abstract class Model {
 	WHERE
 		" . $this->primaryField . " = ?
 	;";
-		// Adds the primary key binding
+		// Adds the primary key binding at the end
 		$values[] = $this->{$this->primaryField};
 
 		$db = new MySQL();
@@ -140,7 +147,7 @@ abstract class Model {
 	/**
 	 * Removes the current bean from Database
 	 *
-	 * @return integer the number of deleted bean, -1 in case of error
+	 * @return bool true if the delete is done, false otherwise
 	 */
 	public final function delete() {
 		$sql = "
@@ -159,29 +166,12 @@ abstract class Model {
 	}
 
 	/**
-	 * Creates the array of "?" for SQL query.
-	 *
-	 * @param array $array the column/value array
-	 * @return array the array of question marks
-	 */
-	private static function createBindingArray($array = array()) {
-		if (!is_array($array) || is_null($array) || empty($array)) {
-			return array();
-		}
-		$ret = array();
-		for ($i = 0; $i < count($array); $i++) {
-			$ret[] = "?";
-		}
-		return $ret;
-	}
-
-	/**
 	 * Retrieves properties of the given object.
 	 *
 	 * @param object $object any object
 	 * @return array the properties on its column name and its value
 	 */
-	private static function getProperties($object) {
+	private static function getProperties($object): array {
 		$properties = array();
 		try {
 			$reflect = new \ReflectionClass(get_class($object));

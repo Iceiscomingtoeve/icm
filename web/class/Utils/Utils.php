@@ -12,10 +12,10 @@ final class Utils {
 	/**
 	 * Retrieves the stacktrace call.
 	 *
-	 * @param boolean $debugInFile Should it save the stack in file ?
+	 * @param bool $debugInFile Should it save the stack in file ?
 	 * @return string the full stacktrace
 	 */
-	public static final function callStack($debugInFile = true) {
+	public static final function callStack(bool $debugInFile = true) {
 		$message = print_r(debug_backtrace(), true);
 
 		if ($debugInFile) {
@@ -28,9 +28,9 @@ final class Utils {
 	 * Logs the given message in the php error log file
 	 *
 	 * @param string $message message to log
-	 * @param mixed $time the date put in a prefix if given
+	 * @param int $time the date put in a prefix if given (see time())
 	 */
-	public static final function log($message, $time = NULL) {
+	public static final function log(string $message, int $time = NULL) {
 		$messageDebug = str_repeat("-", 30) . "\r\n";
 		if ($time != NULL) {
 			$messageDebug .= "[" . self::dateJJ_MM_AAAA(true, $time) . "] ";
@@ -45,12 +45,12 @@ final class Utils {
 	/**
 	 * Fonction permettant d'afficher la date sous forme de JJ/MM/ANNE
 	 *
-	 * @param boolean $heure L'heure est à afficher ? Format HH:MM:SS
-	 * @param integer $timestamp Timestamp (temps UNIX) à convertir. Si NULL ce sera le temps courant
+	 * @param bool $heure L'heure est à afficher ? Format HH:MM:SS
+	 * @param int $timestamp Timestamp (temps UNIX) à convertir. Si NULL ce sera le temps courant
 	 * @return string La date sous forme JJ/MM/ANNE[ HH:MM:SS]
 	 */
 	//TODO: Put in dedicated DateUtils class with 2 format: date and datetime
-	public static final function dateJJ_MM_AAAA($heure = false, $timestamp = NULL) {
+	public static final function dateJJ_MM_AAAA(bool $heure = false, int $timestamp = NULL) {
 		if (is_null($timestamp) || !is_numeric($timestamp)) {
 			$timestamp = time();
 		}
@@ -63,7 +63,7 @@ final class Utils {
 	 * @param string $date La date sous forme JJ/MM/AAAA. Peut être NULL: il prendra le jour d'aujourd'hui
 	 * @return int Timestamp UNIX correspondant à la date
 	 */
-	public static final function dateTimestampUnix($date = NULL) {
+	public static final function dateTimestampUnix(string $date = NULL) {
 		// $timestamp == "JJ/MM/AAAA"
 		if (strpos($date, "/") !== false) {
 			$infos = explode("/", $date);
@@ -90,16 +90,16 @@ final class Utils {
 	 * @param string $mailFrom the sender mail address
 	 * @param string $mailCopy the copied receiver (comma separated)
 	 * @param string $mailHiddenCopy the hidden copied receiver (comma separated)
-	 * @return boolean true if mail was sent, false otherwise
+	 * @return bool true if mail was sent, false otherwise
 	 * @see mail()
 	 */
 	public static final function sendMail(
-		$subject,
-		$message,
-		$mailTo,
-		$mailFrom = MAIL_ADMINISTRATOR,
-		$mailCopy = NULL,
-		$mailHiddenCopy = NULL
+		string $subject,
+		string $message,
+		string $mailTo,
+		string $mailFrom = MAIL_ADMINISTRATOR,
+		string $mailCopy = NULL,
+		string $mailHiddenCopy = NULL
 	) {
 		$headers = "MIME-version: 1.0\n";
 		$headers .= "Content-type: text/html; charset=utf-8\n";
@@ -119,9 +119,9 @@ final class Utils {
 	 *
 	 * @param string $string the full string
 	 * @param string $character the character to find
-	 * @return mixed The position of the character in the string, false if not found
+	 * @return int|bool The position of the character in the string, false if not found
 	 */
-	public static final function lastIndexOf($string, $character) {
+	public static final function lastIndexOf(string $string, string $character) {
 		$pos = strpos(strrev($string), $character);
 		if ($pos != false) {
 			return (strlen($string) - $pos) - 1;
@@ -136,9 +136,10 @@ final class Utils {
 	 * @param string $uri destination URI
 	 * @see header()
 	 */
-	public static final function redirect($uri) {
+	public static final function redirect(string $uri) {
 		header("Location: " . $uri);
-		die;
+		session_write_close();
+		exit;
 	}
 
 	/**
@@ -148,7 +149,7 @@ final class Utils {
 	 * @param string $word the word
 	 * @return string the number and the word (with a s if required)
 	 */
-	public static final function plural($nb, $word) {
+	public static final function plural(int $nb, string $word) {
 		if ($nb > 1) {
 			return $nb . " " . str_replace(" ", "s ", $word) . "s";
 		}
@@ -162,7 +163,7 @@ final class Utils {
 	 * @param string $salt the salt to apply (if any)
 	 * @return string the SHA512 string
 	 */
-	public static final function sha512($string, $salt = NULL) {
+	public static final function sha512(string $string, string $salt = NULL) {
 		$hash = !is_null($salt) ?
 			self::sha512($salt, NULL) . $string :
 			$string;
