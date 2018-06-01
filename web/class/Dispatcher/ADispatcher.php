@@ -3,9 +3,12 @@
 namespace Dispatcher;
 
 use Controller\AController;
+use Model\Bean\UserSession;
+use Pages\Errors\Views\Error404;
 use phpbb\request\request_interface;
+use Utils\Handler\ErrorHandler;
 use Utils\Handler\PhpBB;
-use View\Errors\Error404;
+use View\JsonErrorView;
 use View\View;
 
 /**
@@ -50,10 +53,14 @@ abstract class ADispatcher {
 			return self::$INSTANCE;
 		}
 
-		$page = self::getPage(PhpBB::getInstance()->getRequest());
+		$request = PhpBB::getInstance()->getRequest();
+		$page = self::getPage($request);
 		self::$INSTANCE = self::getDispatcherType($page);
 		self::$INSTANCE->page = $page;
-		self::$INSTANCE->controller = AController::getInstance($page);
+		self::$INSTANCE->controller = AController::getInstance(
+			$page,
+			self::getAction($request)
+		);
 		return self::$INSTANCE;
 	}
 
@@ -64,9 +71,10 @@ abstract class ADispatcher {
 	 * @param string $page name of the page
 	 * @return ADispatcher the required dispatcher for the page
 	 */
-	private static final function getDispatcherType($page) {
+	private static final function getDispatcherType(string $page) {
 		// List here every AJAX pages
 		$pagesAJAX = array(
+			"ajax",
 			"cron"
 		);
 
@@ -90,26 +98,6 @@ abstract class ADispatcher {
 	}
 
 	/**
-	 * Dispatches the page, the action, and parameters to the
-	 * right AController.
-	 *
-	 * @return string the template to print
-	 */
-	public final function dispatch() {
-		$request = PhpBB::getInstance()->getRequest();
-
-		if ($this->controller != NULL) {
-			return $this->handleResponse(
-				$this->controller->executeAction(
-					self::getAction($request),
-					self::getParameters($request)
-				)
-			);
-		}
-		return $this->handleResponse(new Error404());
-	}
-
-	/**
 	 * Retrieves the action from the $_GET.<br>
 	 * Also replaces "-" into "_".
 	 *
@@ -119,6 +107,44 @@ abstract class ADispatcher {
 	public static final function getAction(\phpbb\request\request $request) {
 		$action = $request->variable("action", AController::DEFAULT_ACTION);
 		return str_replace("-", "_", strtolower($action));
+	}
+
+	/**
+	 * Dispatches the page, the action, and parameters to the
+	 * right AController.
+	 *
+	 * @return View the view to print
+	 */
+	public final function dispatch() {
+		$request = PhpBB::getInstance()->getRequest();
+
+		if ($this->controller != NULL) {
+			// If it's an AJAX Dispatcher, it must be bug-free
+			if ($this instanceof AJAX) {
+				try {
+					$view = $this->controller->execute(self::getParameters($request));
+				} catch (\Throwable $ex) {
+					ErrorHandler::logException($ex, false);
+					$view = new JsonErrorView($ex->getMessage());
+				}
+			} else {
+				$view = $this->controller->execute(self::getParameters($request));
+			}
+			$view = $this->handleResponse($view);
+
+			// Sets the current URI in the cookie in case of callback redirection
+			UserSession::getSession()->setActiveUri(
+				$request->variable(
+					"REQUEST_URI",
+					"/",
+					true,
+					request_interface::SERVER
+				)
+			);
+
+			return $view;
+		}
+		return $this->handleResponse(new Error404());
 	}
 
 	/**
@@ -158,7 +184,7 @@ abstract class ADispatcher {
 	 * Handles the response accordingly.
 	 *
 	 * @param View $view the view
-	 * @return mixed the value to be printed
+	 * @return View the View to print
 	 */
 	protected abstract function handleResponse(View $view);
 

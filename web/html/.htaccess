@@ -18,7 +18,7 @@ RewriteEngine On
 #RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Do not process images or CSS files further
-RewriteRule \.(gif|jpe?g|png|js|css|swf|ico|txt|pdf|json)$ - [L]
+RewriteRule \.(gif|jpe?g|png|js|css|scss|swf|ico|txt|pdf|json|svg|eot|ttf|woff|woff2|map)$ - [L]
 
 # Return a 301 error if the URI has no slash (/) nor dot (.)
 RewriteCond %{REQUEST_URI} !/$

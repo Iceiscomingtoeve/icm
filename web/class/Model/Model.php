@@ -34,13 +34,26 @@ abstract class Model {
 	 * @param string $primaryField the name of column of the primary key
 	 */
 	public function __construct(
-		$table,
-		$uniqueFields = array(),
-		$primaryField = "id"
+		string $table,
+		array $uniqueFields = array(),
+		string $primaryField = "id"
 	) {
 		$this->table = $table;
 		$this->uniqueFields = $uniqueFields;
 		$this->primaryField = $primaryField;
+	}
+
+	/**
+	 * Only allow to update fields, not creating magic ones.
+	 *
+	 * @param string $name the name of the field
+	 * @param mixed $value the value of the field
+	 */
+	public function __set(string $name, $value): void {
+		$properties = self::getProperties($this);
+		if (array_key_exists($name, $properties)) {
+			$this->{$name} = $value;
+		}
 	}
 
 	/**
@@ -51,15 +64,24 @@ abstract class Model {
 	}
 
 	/**
+	 * Hides non public fields.
+	 *
+	 * @return array the array of info to print
+	 */
+	public function __debugInfo() {
+		return self::getProperties($this);
+	}
+
+	/**
 	 * Inserts new line in DataBase.<br>
 	 * In case of duplicate entry, it will update non unique fields.
 	 *
 	 * @param bool $ignore should it be an insert ignore ? (false by default)
 	 * @return bool true if the insert is done, false otherwise
 	 */
-	public final function insert(
-		$ignore = false
-	) {
+	public function insert(
+		bool $ignore = false
+	): bool {
 		$properties = self::getProperties($this);
 		$columns = array_keys($properties);
 		$values = array_values($properties);
@@ -79,12 +101,18 @@ abstract class Model {
 	" . $this->table . "
 	(" . implode(", ", $columns) . ")
 	VALUES
-	(" . implode(", ", self::createBindingArray($columns)) . ")
+	(" . implode(", ", MySQL::createBindingArray($columns)) . ")
 	ON DUPLICATE KEY UPDATE
 	" . implode(", ", $columnOnUpdate) . ";";
 
 		$db = new MySQL();
 		$statement = $db->prepare($sql);
+		for ($i = 0; $i < count($values); $i++) {
+			$value = $values[$i];
+			if (is_bool($value)) {
+				$values[$i] = intval($value);
+			}
+		}
 		$status = $statement->execute($values);
 		$statement = NULL;
 
@@ -100,7 +128,7 @@ abstract class Model {
 	 *
 	 * @return bool true if the insert is done, false otherwise
 	 */
-	public final function update() {
+	public function update(): bool {
 		$properties = self::getProperties($this);
 		$columns = array_keys($properties);
 		$values = array_values($properties);
@@ -117,6 +145,7 @@ abstract class Model {
 			}
 			$setArray[] = $column . " = ?";
 		}
+		$values = array_values($values);
 
 		$sql = "
 	UPDATE
@@ -126,7 +155,7 @@ abstract class Model {
 	WHERE
 		" . $this->primaryField . " = ?
 	;";
-		// Adds the primary key binding
+		// Adds the primary key binding at the end
 		$values[] = $this->{$this->primaryField};
 
 		$db = new MySQL();
@@ -140,9 +169,9 @@ abstract class Model {
 	/**
 	 * Removes the current bean from Database
 	 *
-	 * @return integer the number of deleted bean, -1 in case of error
+	 * @return bool true if the delete is done, false otherwise
 	 */
-	public final function delete() {
+	public function delete(): bool {
 		$sql = "
 	DELETE FROM
 		" . $this->table . "
@@ -159,20 +188,16 @@ abstract class Model {
 	}
 
 	/**
-	 * Creates the array of "?" for SQL query.
+	 * Replace any string by its enum value.
 	 *
-	 * @param array $array the column/value array
-	 * @return array the array of question marks
+	 * @param string $column the column name
+	 * @param string $enumClassName the class name (with namespace) of the BasicEnum
 	 */
-	private static function createBindingArray($array = array()) {
-		if (!is_array($array) || is_null($array) || empty($array)) {
-			return array();
-		}
-		$ret = array();
-		for ($i = 0; $i < count($array); $i++) {
-			$ret[] = "?";
-		}
-		return $ret;
+	protected final function replaceStringByEnums(
+		string $column,
+		string $enumClassName
+	) {
+		$this->{$column} = new $enumClassName($this->{$column});
 	}
 
 	/**
@@ -181,7 +206,7 @@ abstract class Model {
 	 * @param object $object any object
 	 * @return array the properties on its column name and its value
 	 */
-	private static function getProperties($object) {
+	private static function getProperties($object): array {
 		$properties = array();
 		try {
 			$reflect = new \ReflectionClass(get_class($object));

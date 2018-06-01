@@ -2,9 +2,9 @@
 
 namespace Dispatcher;
 
+use Pages\Errors\Views\Error404;
 use Utils\Utils;
-use View\Errors\Error404;
-use View\ErrorView;
+use View\JsonErrorView;
 use View\View;
 
 /**
@@ -21,7 +21,7 @@ final class AJAX extends ADispatcher {
 			$values = $view->showTemplate();
 
 			// If the controller had an error
-			if ($view instanceof ErrorView) {
+			if ($view instanceof JsonErrorView) {
 				$json['state'] = "error";
 				$json['error'] = $values;
 			} else {

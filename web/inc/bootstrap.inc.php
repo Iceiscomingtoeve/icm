@@ -20,9 +20,6 @@ function createMissingFile($filePath = "") {
 	}
 }
 
-// Init the $_SESSION
-session_start();
-
 // Sets language, charset, TimeZone and other funny stuff
 header("charset=UTF-8");
 mb_internal_encoding("UTF-8");
@@ -54,9 +51,7 @@ define("PATH_COMPOSER", PATH_PROJECT . "/vendor", false);
 define("PATH_CONFIG", PATH_PROJECT . "/conf", false);
 define("PATH_CLASS", PATH_PROJECT . "/class", false);
 define("PATH_UTILITY", PATH_CLASS . "/Utils", false);
-define("PATH_DISPATCHER", PATH_CLASS . "/Dispatcher", false);
 define("PATH_CONTROLLER", PATH_CLASS . "/Controller", false);
-define("PATH_MODEL", PATH_CLASS . "/Model", false);
 
 // Creates PHP log file
 createMissingFile(PATH_LOG_PHP_ERROR);
@@ -96,6 +91,10 @@ define("FULL_DOMAIN", "http://" . DOMAIN, false);
 // Cookie configuration
 define("DISCLAIMER_NAME", $iniConfig['disclaimer_name'], false);
 define("COOKIE_DEFAULT_EXPIRATION", $iniConfig['default_expiration'], false);
+// Session architecture
+define("SESSION_CURRENT_URI", "current_uri", false);
+define("SESSION_EVE_CHARACTERS", "characters", false);
+define("SESSION_MAIN_CHARACTER", "main_character", false);
 
 // Mail addresses in case of error
 define("MAIL_DEVELOPER", $iniConfig['developer'], false);
@@ -118,9 +117,21 @@ define("ESI_LOGIN_BASE_URL", "https://login.eveonline.com", false);
 define("ESI_CLIENT_ID", $iniConfig['client_id'], false);
 define("ESI_SECRET_KEY", $iniConfig['secret_key'], false);
 define("ESI_CALLBACK_URL", $iniConfig['callback_url'], false);
+define("ESI_SCOPE", $iniConfig['esi_scope'], false);
+define(
+	"OAUTH_LOGIN_URL",
+	ESI_LOGIN_BASE_URL .
+		"/oauth/authorize?response_type=code&redirect_uri=" .
+		urlencode(FULL_DOMAIN . "/" . ESI_CALLBACK_URL) .
+		"&client_id=" .
+		ESI_CLIENT_ID .
+		"&scope=" .
+		ESI_SCOPE,
+	false
+);
 
 define("PATH_ESI_CACHE", PATH_PROJECT . "/esi-cache/", false);
-define("PATH_ESI_LOG", PATH_ROOT . "/log/esi.log", false);
+define("PATH_ESI_LOG", PATH_ROOT . "/log/", false);
 
 // Define of EVE Online utility stuff
 define("IMAGE_SERVER_URL", $iniConfig['image_server_url'], false);
@@ -133,6 +144,7 @@ define("PATH_PHPBB", $iniConfig['phpbb_path'], false);
 define("CORPORATION_ID", $iniConfig['corporation_id'], false);
 define("PHPBB_GROUP_VERIFIED_ID", $iniConfig['phpbb_group_verified_id'], false);
 define("PHPBB_GROUP_DIRECTOR_ID", $iniConfig['phpbb_group_director_id'], false);
+define("PHPBB_GROUP_FRIEND_ID", $iniConfig['phpbb_group_friend_id'], false);
 
 // Security measure
 unset($iniConfig);

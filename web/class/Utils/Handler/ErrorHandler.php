@@ -23,13 +23,18 @@ final class ErrorHandler implements Handler {
 	/**
 	 * Logs the message/error and send a debug mail to MAIL_DEVELOPER if not a E_NOTICE.
 	 *
-	 * @param integer $number error number
+	 * @param int $number error number
 	 * @param string $message error message
 	 * @param string $file file path
-	 * @param integer $line line in the file
+	 * @param int $line line in the file
 	 * @throws \ErrorException
 	 */
-	public static function log($number, $message, $file, $line) {
+	public static function log(
+			int $number,
+			string $message,
+			string $file,
+			int $line
+	) {
 		// Silent operator (@) activated ?
 		if (error_reporting() > 0) {
 			throw new \ErrorException($message, $number, $number, $file, $line);
@@ -40,8 +45,12 @@ final class ErrorHandler implements Handler {
 	 * Logs the Exception and send a debug mail to MAIL_DEVELOPER if not an INFO.
 	 *
 	 * @param \Throwable $throwable the exception thrown
+	 * @param bool $forceHide should the error be forced to be hidden ?
 	 */
-	public static function logException(\Throwable $throwable) {
+	public static function logException(
+		\Throwable $throwable,
+		bool $forceHide = false
+	) {
 		ob_start(
 			!in_array("ob_gzhandler", ob_list_handlers()) ?
 				"ob_gzhandler" : NULL
@@ -72,7 +81,7 @@ final class ErrorHandler implements Handler {
 		}
 
 		$number = $throwable->getCode();
-		$prefix = "[" . Utils::dateJJ_MM_AAAA(true, time()) . "] ";
+		$prefix = "[" . Utils::formatDate(time(), true) . "] ";
 		$message = $prefix . "URL: " . $url . "\n";
 		$message .= $prefix . "Erreur: " . self::getPhpErrorFromNumber($number) . " (" . $number . ")" . "\n";
 		$message .= $prefix . "Message: " . $throwable->getMessage() . "\n";
@@ -83,11 +92,11 @@ final class ErrorHandler implements Handler {
 		Utils::log($message . str_repeat("=", 60));
 
 		// If it's in debug purpose, print the error directly
-		if (ini_get('display_errors')) {
+		if (ini_get('display_errors') && !$forceHide) {
 			echo $dump;
 		}
 		Utils::sendMail(
-			"EMA - Erreur le " . Utils::dateJJ_MM_AAAA(true, time()),
+			"EMA - Erreur le " . Utils::formatDate(time(), true),
 			$dump,
 			MAIL_DEVELOPER
 		);
@@ -215,7 +224,7 @@ final class ErrorHandler implements Handler {
 	/**
 	 * Retrieves the type of error according to its level.
 	 *
-	 * @param integer $errorNumber error value
+	 * @param int|string $errorNumber error value
 	 * @return string error type
 	 */
 	private static function getPhpErrorFromNumber($errorNumber) {
@@ -264,7 +273,11 @@ final class ErrorHandler implements Handler {
 	 * @param string $defValue the default value
 	 * @return string the value of the default value
 	 */
-	private static function getServerVariable($request, $varName, $defValue = "UNKNOWN") {
+	private static function getServerVariable(
+			\phpbb\request\request $request,
+			string $varName,
+			string $defValue = "UNKNOWN"
+	) {
 		return $request->variable($varName, $defValue, true, request_interface::SERVER);
 	}
 

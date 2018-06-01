@@ -2,9 +2,11 @@
 
 namespace Controller;
 
+use Model\Bean\OAuth2Users;
+use Model\Bean\UserSession;
+use Model\Session\EVECharacter;
 use Utils\Handler\PhpBB;
 use Utils\Utils;
-use View\Errors\Error501;
 use View\View;
 
 /**
@@ -12,10 +14,6 @@ use View\View;
  */
 abstract class AController {
 
-	// Treatment failed
-	const TREATMENT_ERROR = "error";
-	// Treatment succeed
-	const TREATMENT_SUCCEED = "success";
 	// Default action on every controller
 	const DEFAULT_ACTION = "show";
 
@@ -27,12 +25,26 @@ abstract class AController {
 	private static $INSTANCE = NULL;
 
 	/**
+	 * @var UserSession $session the current User Session
+	 */
+	protected $session;
+
+	/**
+	 * @var OAuth2Users[] $charactersOAuth linked characters
+	 */
+	protected $charactersOAuth = array();
+
+	/**
 	 * Retrieves the AController that can handle the asked page.
 	 *
 	 * @param string $page page name
+	 * @param string $action action (show by default)
 	 * @return AController the right AController or NULL if any found
 	 */
-	public static final function getInstance($page) {
+	public static final function getInstance(
+		string $page,
+		string $action = self::DEFAULT_ACTION
+	) {
 		// Retrieves the AController if already created
 		if (!is_null(self::$INSTANCE)) {
 			return self::$INSTANCE;
@@ -40,44 +52,69 @@ abstract class AController {
 
 		// Retrieve the page + upper case the first letter
 		$page = ucfirst($page);
-		// Retrieves the Controller which match the page
-		$controllerFile = PATH_CONTROLLER . "/" . $page . ".php";
+		$action = strcmp("Errors", $page) == 0 ? "All" : ucfirst($action);
+
+		// Retrieves the Controller which match the page and action
+		$controllerPath = "Pages" .
+			DIRECTORY_SEPARATOR .
+			ucfirst($page) .
+			DIRECTORY_SEPARATOR .
+			ucfirst($action) .
+			DIRECTORY_SEPARATOR .
+			"Controller.php";
+
 		// If the Controller is found, include it
-		if (is_file($controllerFile)) {
-			// Update the class name with the namespace of the current one: Controller
-			$className = __NAMESPACE__ . "\\" . $page;
+		if (is_file(PATH_CLASS . DIRECTORY_SEPARATOR . $controllerPath)) {
+			// Update the class name with the namespace and remove the ".php" extension
+			$className = str_replace(
+				DIRECTORY_SEPARATOR,
+				"\\",
+				substr($controllerPath, 0, Utils::lastIndexOf($controllerPath, "."))
+			);
 			self::$INSTANCE = new $className();
 		} else {
 			// Log that the template was not found
 			Utils::callStack();
-			Utils::log("Controller " . $controllerFile . " does not exist !", time());
+			Utils::log("Controller " . PATH_CLASS . "/" . $controllerPath . " does not exist !", time());
 			Utils::redirect("/errors/404");
 		}
+		self::$INSTANCE->session = UserSession::getSession();
+		self::$INSTANCE->getActiveCharacterFromUser();
 		return self::$INSTANCE;
-	}
-
-	/**
-	 * Executes the action and provides the parameters array to treat the needs.
-	 *
-	 * @param string $action asked action
-	 * @param array $params parameters in an array
-	 * @return View the view according to the controller
-	 */
-	public final function executeAction($action = self::DEFAULT_ACTION, array $params = array()) {
-		if (method_exists($this, $action)) {
-			return $this->$action($params);
-		}
-		return new Error501();
 	}
 
 	/**
 	 * Default action for any AController
 	 *
 	 * @param array $params parameters in an array
-	 * @return string treatment state
+	 * @return View the view to print
 	 */
-	public function show(array $params = array()) {
-		return new Error501();
+	public abstract function execute(array $params = array()): View;
+
+	/**
+	 * Retrieves current linked characters + prepares the UserSession with it.
+	 */
+	private function getActiveCharacterFromUser() {
+		$currentUserId = $this->getPhpbbHandler()->getUser()->data['user_id'];
+		if (!$this->getPhpbbHandler()->isAnonymous()) {
+			$this->charactersOAuth = OAuth2Users::getCharacterFromUserId($currentUserId);
+		}
+
+		// Security check to not allow user to see other player's character
+		if (!$this->getPhpbbHandler()->isDirector() &&
+			!is_null($this->session->getActiveCharacter()) &&
+			$this->session->getActiveCharacter()->getOauthUser()->id_forum_user != $currentUserId
+		) {
+			$this->session->setActiveCharacter(NULL);
+		}
+
+		foreach ($this->charactersOAuth as $character) {
+			$eveCharacter = new EVECharacter($character);
+			if ($character->is_main_character && is_null($this->session->getActiveCharacter())) {
+				$this->session->setActiveCharacter($eveCharacter);
+			}
+			$this->session->addEVECharacter($eveCharacter);
+		}
 	}
 
 	/**

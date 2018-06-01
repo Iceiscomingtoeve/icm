@@ -10,9 +10,11 @@
 		}
 	],
 	"require": {
-		"php": ">=7.0.0",
-		"league/oauth2-client": "~1.0",
-		"phpbb/phpbb": "3.3.x-dev",
-		"eveseat/eseye": "^0.0.11",
+		"php": ">=7.1.0",
+		"league/oauth2-client": "^2.0.0",
+		"eveseat/eseye": "^1.0.0"
+	},
+	"require-dev" : {
+		"phpbb/phpbb": "3.3.x-dev"
 	}
 }
