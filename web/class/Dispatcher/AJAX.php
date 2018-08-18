@@ -2,9 +2,10 @@
 
 namespace Dispatcher;
 
+use Pages\Errors\Views\Error404;
+use Utils\Handler\ErrorHandler;
 use Utils\Utils;
-use View\Errors\Error404;
-use View\ErrorView;
+use View\JsonErrorView;
 use View\View;
 
 /**
@@ -12,7 +13,22 @@ use View\View;
  */
 final class AJAX extends ADispatcher {
 
-	protected final function handleResponse(View $view) {
+	protected final function handleResponse(
+		\phpbb\request\request $request
+	): View {
+		try {
+			$view = $this->controller->execute(self::getParameters($request));
+		} catch (\Throwable $ex) {
+			ErrorHandler::logException($ex, DEBUG);
+			$view = new JsonErrorView($ex->getMessage());
+		}
+		$this->prepareJsonResponse($view);
+
+		// Nothing more required, die "properly"
+		die;
+	}
+
+	private function prepareJsonResponse(View $view) {
 		$json = array();
 
 		// If the result is OK
@@ -21,7 +37,7 @@ final class AJAX extends ADispatcher {
 			$values = $view->showTemplate();
 
 			// If the controller had an error
-			if ($view instanceof ErrorView) {
+			if ($view instanceof JsonErrorView) {
 				$json['state'] = "error";
 				$json['error'] = $values;
 			} else {
@@ -37,9 +53,6 @@ final class AJAX extends ADispatcher {
 
 		// Prints the JSON
 		echo json_encode($json, JSON_UNESCAPED_SLASHES);
-
-		// Nothing more required, die "properly"
-		die;
 	}
 
 }

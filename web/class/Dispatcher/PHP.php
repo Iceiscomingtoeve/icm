@@ -9,16 +9,10 @@ use View\View;
  */
 final class PHP extends ADispatcher {
 
-	protected final function handleResponse(View $view) {
-		// The template will be the only one which can retrieve data
-		ob_start(
-			!in_array("ob_gzhandler", ob_list_handlers()) ?
-				"ob_gzhandler" : NULL
-		);
-		$view->showTemplate();
-		$ret = ob_get_clean();
-		ob_end_flush();
-		return $ret;
+	protected final function handleResponse(
+		\phpbb\request\request $request
+	): View {
+		return $this->controller->execute(self::getParameters($request));
 	}
 
 }

@@ -2,56 +2,69 @@
 
 namespace Utils\Enum;
 
+use Utils\Exceptions\UnexpectedValueException;
+use Utils\Handler\ErrorHandler;
+
 /**
  * Abstract class for any enum.
  *
  * @package Utils\Enum
- * @see https://stackoverflow.com/questions/254514/php-and-enumerations?answertab=votes#tab-top
+ * @see http://octocado.com/?p=596
  */
 abstract class BasicEnum {
 
-	private static $constCacheArray = array();
+	/** @var string $value the name of the enum */
+	private $value;
 
-	private static function getConstants() {
-		if (self::$constCacheArray == NULL) {
-			self::$constCacheArray = [];
+	/** @var array $constCacheArray cache array of constant */
+	private $constCacheArray = array();
+
+	public final function __construct(string $value) {
+		$value = strtoupper($value);
+		$constants = $this->getConstants();
+		if(!array_key_exists($value, $constants)) {
+			throw new UnexpectedValueException("Undefined constant: " . $value);
 		}
-		$calledClass = get_called_class();
-		if (!array_key_exists($calledClass, self::$constCacheArray)) {
-			$reflect = new \ReflectionClass($calledClass);
-			self::$constCacheArray[$calledClass] = $reflect->getConstants();
-		}
-		return self::$constCacheArray[$calledClass];
+		$this->value = $value;
 	}
 
 	/**
-	 * Is the given name a valid constant ?
-	 *
-	 * @param string $name the name
-	 * @param bool $strict should it be case sensitive ?
-	 * @return bool true if the constant exists, false otherwise
+	 * @return string
 	 */
-	public static function isValidName($name, $strict = false) {
-		$constants = self::getConstants();
-
-		if ($strict) {
-			return array_key_exists($name, $constants);
-		}
-
-		$keys = array_map("strtolower", array_keys($constants));
-		return in_array(strtolower($name), $keys);
+	public function getValue(): string {
+		return $this->value;
 	}
 
 	/**
-	 * Is the given value a valid one ?
+	 * Is the given BasicEnum is the same of the current one ?
 	 *
-	 * @param mixed $value the value
-	 * @param bool $strict should it be case sensitive ?
-	 * @return bool true if the value exists, false otherwise
+	 * @param null|BasicEnum $enum the BasicEnum to test
+	 * @return bool true if it's the same, false otherwise
 	 */
-	public static function isValidValue($value, $strict = true) {
-		$values = array_values(self::getConstants());
-		return in_array($value, $values, $strict);
+	public final function equals(?BasicEnum $enum): bool {
+		return !is_null($enum) && strcmp($this->value, $enum->value) === 0;
+	}
+
+	private function getConstants() {
+		if (empty($this->constCacheArray)) {
+			try {
+				$reflect = new \ReflectionClass($this);
+				$this->constCacheArray = array_map("strtoupper", $reflect->getConstants());
+			} catch (\ReflectionException $ex) {
+				ErrorHandler::logException($ex);
+			}
+		}
+		return $this->constCacheArray;
+	}
+
+	public final function __toString() {
+		return $this->getValue();
+	}
+
+	public final function __debugInfo() {
+		return array(
+			"value" => $this->value
+		);
 	}
 
 }
